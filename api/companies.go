@@ -8,10 +8,11 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	fw "github.com/kimdcottrell/edgar/api/framework"
 )
 
 const (
-	cikLookupData = "https://www.sec.gov/Archives/edgar/cik-lookup-data.txt"
+	cikLookupData fw.SecUrl = "https://www.sec.gov/Archives/edgar/cik-lookup-data.txt"
 )
 
 type Company struct {
@@ -19,12 +20,12 @@ type Company struct {
 	ID   string `json:"id"`
 }
 
-func (s *Server) AddRoutesForCompanies() {
-	s.Router.GET("/companies", getCompanies)
+func AddRoutesForCompanies(g *gin.RouterGroup) {
+	g.GET("/companies", getCompanies)
 }
 
 func getCompanies(c *gin.Context) {
-	res, err := NewRequest(http.MethodGet, cikLookupData, nil)
+	res, err := cikLookupData.NewRequest(http.MethodGet, nil)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err,

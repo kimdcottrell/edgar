@@ -1,8 +1,6 @@
 package api
 
 import (
-	"io"
-	"log"
 	"net/http"
 	"time"
 
@@ -18,48 +16,44 @@ import (
 // ---
 
 type Server struct {
-	Router *gin.Engine
+	Router
+}
+
+type Router struct {
+	*gin.Engine
+}
+
+const authPath string = "sudo"
+
+func Start() {
+	gin.ForceConsoleColor()
+	server := Server{
+		Router: Router{
+			Engine: gin.Default(),
+		},
+	}
+	server.Router.setupRoutes()
+	server.Router.serve()
 }
 
 // routes are to be held in their own respective files, near their handlers
-func (s *Server) AddRoutes() {
-	s.AddRoutesForCompanies()
+func (r *Router) setupRoutes() {
+	// Simple group: v1
+	v1 := r.Group("/v1")
+	{
+		AddRoutesForCompanies(v1)
+		AddRoutesForPing(v1)
+	}
 }
 
-func (s *Server) RunRouter() {
-	s.Router.Run(":8080")
-}
-
-// ---
-// MIDDLEWARE FOR REQUESTS TO SEC.GOV
-// ---
-
-func NewRequest(method string, url string, body io.Reader) (*http.Response, error) {
-	// set base timeout to avoid hanging
-	client := &http.Client{
-		Timeout: 10 * time.Second,
+func (r *Router) serve() {
+	s := &http.Server{
+		Addr:           ":8080",
+		Handler:        r,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
 	}
-
-	req, err := http.NewRequest(method, url, body)
-	if err != nil {
-		log.Fatalf("Client: could not create request: %s\n", err)
-		return req.Response, err
-	}
-
-	// read more: https://www.sec.gov/os/webmaster-faq#code-support
-	req.Header.Set("Content-Type", "application/txt")
-	req.Header.Set("User-Agent", "EDGAR-API me@kimdcottrell.com")
-
-	res, err := client.Do(req)
-	if err != nil {
-		log.Fatalln(err)
-		return res, err
-	}
-
-	// TODO: pretty sure this will never fire
-	if res.StatusCode > 299 {
-		log.Fatalf("Response failed with status code: %d", res.StatusCode)
-	}
-
-	return res, err
+	s.ListenAndServe()
+	r.Run()
 }
