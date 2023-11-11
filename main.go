@@ -2,12 +2,14 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	c "github.com/kimdcottrell/edgar/companies" // TODO: lazy load this as 'api'
+	api "github.com/kimdcottrell/edgar/api"
 )
 
 func main() {
-	r := gin.Default()
-	r.GET("/companies", c.GetCompanies)
-	// Listen and Server in 0.0.0.0:8080
-	r.Run(":8080")
+	server := api.Server{
+		Router: gin.Default(),
+	}
+	server.AddRoutes()
+	server.Run()
+
 }
