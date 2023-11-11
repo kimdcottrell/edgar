@@ -26,7 +26,7 @@ func (s *Server) AddRoutes() {
 	s.AddRoutesForCompanies()
 }
 
-func (s *Server) Run() {
+func (s *Server) RunRouter() {
 	s.Router.Run(":8080")
 }
 

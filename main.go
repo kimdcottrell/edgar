@@ -6,10 +6,11 @@ import (
 )
 
 func main() {
+	gin.ForceConsoleColor()
 	server := api.Server{
 		Router: gin.Default(),
 	}
 	server.AddRoutes()
-	server.Run()
+	server.RunRouter()
 
 }
