@@ -20,10 +20,10 @@ type Company struct {
 }
 
 func (s *Server) AddRoutesForCompanies() {
-	s.Router.GET("/companies", GetCompanies)
+	s.Router.GET("/companies", getCompanies)
 }
 
-func GetCompanies(c *gin.Context) {
+func getCompanies(c *gin.Context) {
 	res, err := NewRequest(http.MethodGet, cikLookupData, nil)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
