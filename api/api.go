@@ -5,6 +5,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 // ---
@@ -17,6 +20,11 @@ import (
 
 type Server struct {
 	Router
+	Database
+}
+
+type Database struct {
+	*sqlx.DB
 }
 
 type Router struct {
@@ -28,8 +36,11 @@ const authPath string = "sudo"
 func Start() {
 	gin.ForceConsoleColor()
 	server := Server{
-		Router: Router{
-			Engine: gin.Default(),
+		Router{
+			gin.Default(),
+		},
+		Database{
+			sqlx.MustConnect("postgres", "user=api dbname=api host=persistent_db port=5432 password=password sslmode=disable"),
 		},
 	}
 	server.Router.setupRoutes()

@@ -9,6 +9,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	fw "github.com/kimdcottrell/edgar/api/framework"
+
+	_ "github.com/lib/pq"
 )
 
 const (

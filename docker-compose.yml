@@ -7,6 +7,7 @@ services:
       dockerfile: images/api.Dockerfile
     env_file:
       - .env
+    tty: true
     volumes:
       - ./api:/go/src/api
       - ./main.go:/go/src/main.go
@@ -28,7 +29,7 @@ services:
       - proxy
 
   persistent_db:
-    image: postgres:16
+    image: postgres:15
     restart: always
     env_file:
       - .env
@@ -44,14 +45,25 @@ services:
     labels:
       - traefik.enable=false
     
-  persistent_db_adminer:
+  persistent_db_web:
     image: adminer
     restart: always
     labels:
       - traefik.enable=true
-      - traefik.http.routers.adminer.rule=Host(`db.edgar.dev`)
-      - traefik.http.routers.adminer.entrypoints=web
-      - traefik.http.services.adminer.loadbalancer.server.port=8080
+      - traefik.http.middlewares.db-edgar-redirect-web-secure.redirectscheme.scheme=https
+      - traefik.http.routers.db-edgar.middlewares=db-edgar-redirect-web-secure
+      - traefik.http.routers.db-edgar-web.rule=Host(`db.edgar.dev`)
+      - traefik.http.routers.db-edgar-web.entrypoints=web
+      - traefik.http.routers.db-edgar-web-secure.rule=Host(`db.edgar.dev`)
+      - traefik.http.routers.db-edgar-web-secure.tls=true
+      - traefik.http.routers.db-edgar-web-secure.entrypoints=web-secure
+      # if you have multiple ports exposed on the service, specify port in the web-secure service
+      - traefik.http.services.db-edgar-web-secure.loadbalancer.server.port=8080
+
+      # - traefik.enable=true
+      # - traefik.http.routers.adminer.rule=Host(`db.edgar.dev`)
+      # - traefik.http.routers.adminer.entrypoints=web
+      # - traefik.http.services.adminer.loadbalancer.server.port=8080
     networks:
       - proxy
 
