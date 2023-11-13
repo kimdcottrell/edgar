@@ -7,7 +7,6 @@ services:
       dockerfile: images/api.Dockerfile
     env_file:
       - .env
-    tty: true
     volumes:
       - ./api:/go/src/api
       - ./main.go:/go/src/main.go
@@ -26,6 +25,7 @@ services:
       # if you have multiple ports exposed on the service, specify port in the web-secure service
       - traefik.http.services.api-edgar-web-secure.loadbalancer.server.port=8080
     networks:
+      - default
       - proxy
 
   persistent_db:
@@ -44,6 +44,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     labels:
       - traefik.enable=false
+    networks:
+      - default # removing this may cause dns issues between the containers, despite this dehavior supposedly being the default
     
   persistent_db_web:
     image: adminer
@@ -57,15 +59,12 @@ services:
       - traefik.http.routers.db-edgar-web-secure.rule=Host(`db.edgar.dev`)
       - traefik.http.routers.db-edgar-web-secure.tls=true
       - traefik.http.routers.db-edgar-web-secure.entrypoints=web-secure
-      # if you have multiple ports exposed on the service, specify port in the web-secure service
       - traefik.http.services.db-edgar-web-secure.loadbalancer.server.port=8080
-
-      # - traefik.enable=true
-      # - traefik.http.routers.adminer.rule=Host(`db.edgar.dev`)
-      # - traefik.http.routers.adminer.entrypoints=web
-      # - traefik.http.services.adminer.loadbalancer.server.port=8080
     networks:
       - proxy
+      - default
+    depends_on:
+      - persistent_db
 
   in_memory_db:
     image: redis:7-bookworm
@@ -74,6 +73,8 @@ services:
     restart: on-failure
     volumes:
       - in_memory_db:/data
+    networks:
+      - default
 
 volumes:
   persistent_db_data:
