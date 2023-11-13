@@ -1,0 +1,14 @@
+{
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "api",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+				"golang.go",
+				"ms-azuretools.vscode-docker",
+				"GitHub.copilot",
+				"windmilleng.vscode-go-autotest"
+			]
+        }
+    }
+}
