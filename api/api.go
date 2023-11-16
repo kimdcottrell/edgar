@@ -19,32 +19,24 @@ import (
 // ---
 
 type API interface {
-	RunMigrations(*Server)
 	SetupRoutes(*Server)
 }
 
+type Persistable interface {
+	RunMigrations(*Server)
+}
+
 type Server struct {
-	Router
-	Database
-}
-
-type Database struct {
-	*gorm.DB
-}
-
-type Router struct {
-	*gin.Engine
+	Router   *gin.Engine
+	Database *gorm.DB
 }
 
 var (
-	API_ENDPOINTS = []API{Company{}}
+	API_ENDPOINTS         = []API{Company{}, Ping{}}
+	PERSISTABLE_ENDPOINTS = []Persistable{Company{}}
 )
 
-const authPath string = "sudo"
-
 func Start() {
-	gin.ForceConsoleColor()
-
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN: framework.API_DB_CONNECTION_STRING,
 	}), &gorm.Config{})
@@ -52,22 +44,21 @@ func Start() {
 		panic("Failed to connect database")
 	}
 
+	gin.ForceConsoleColor()
+	router := gin.Default()
+
 	server := Server{
-		Router{
-			gin.Default(),
-		},
-		Database{
-			db,
-		},
+		router,
+		db,
 	}
 	server.runMigrations()
 	server.setupRoutes()
-	server.Router.serve()
+	server.serve()
 }
 
 func (s *Server) runMigrations() {
-	for _, a := range API_ENDPOINTS {
-		a.RunMigrations(s)
+	for _, p := range PERSISTABLE_ENDPOINTS {
+		p.RunMigrations(s)
 	}
 }
 
@@ -78,14 +69,14 @@ func (s *Server) setupRoutes() {
 	}
 }
 
-func (r *Router) serve() {
-	s := &http.Server{
+func (s *Server) serve() {
+	h := &http.Server{
 		Addr:           ":8080",
-		Handler:        r,
+		Handler:        s.Router,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
-	s.ListenAndServe()
-	r.Run()
+	h.ListenAndServe()
+	s.Router.Run()
 }

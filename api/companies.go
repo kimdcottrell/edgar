@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	fw "github.com/kimdcottrell/edgar/api/framework"
+	framework "github.com/kimdcottrell/edgar/api/framework"
 )
 
 const (
-	cikLookupData fw.SecUrl = "https://www.sec.gov/Archives/edgar/cik-lookup-data.txt"
+	CIK_LOOKUP_DATA framework.SecUrl = "https://www.sec.gov/Archives/edgar/cik-lookup-data.txt"
 )
 
 type Company struct {
@@ -21,7 +21,7 @@ type Company struct {
 }
 
 func (c Company) RunMigrations(s *Server) {
-	err := s.Database.Migrator().CreateTable(&Company{})
+	err := s.Database.Migrator().AutoMigrate(&Company{})
 	if err != nil {
 		panic("Failed to migrate database")
 	}
@@ -30,12 +30,23 @@ func (c Company) RunMigrations(s *Server) {
 func (c Company) SetupRoutes(s *Server) {
 	v1 := s.Router.Group("/v1")
 	{
-		v1.GET("/companies", getCompanies)
+		// TODO: this will become a PUT and will be used to update the database
+		v1.GET("/companies", getCompaniesEndpointHandler(s))
+
+		// TODO: a new endpoint will be created to get the company data, and another for individual records
 	}
 }
 
-func getCompanies(c *gin.Context) {
-	res, err := cikLookupData.NewRequest(http.MethodGet, nil)
+func getCompaniesEndpointHandler(s *Server) gin.HandlerFunc {
+	fn := func(c *gin.Context) {
+		getCompanies(c, s)
+	}
+
+	return gin.HandlerFunc(fn)
+}
+
+func getCompanies(c *gin.Context, s *Server) {
+	res, err := CIK_LOOKUP_DATA.NewRequest(http.MethodGet, nil)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err,

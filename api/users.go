@@ -1,29 +1,31 @@
 package api
 
-import (
-	"net/http"
+// TODO: fix this up after you make a real auth middleware
 
-	"github.com/gin-gonic/gin"
-	uuid "github.com/gofrs/uuid/v5"
-	"github.com/kimdcottrell/edgar/api/middleware"
-)
+// import (
+// 	"net/http"
 
-type User struct {
-	ID       uuid.UUID `db:"id" json:"id"`
-	Username string    `db:"username" json:"username"`
-	Password string    `db:"password" json:"password"`
-}
+// 	"github.com/gin-gonic/gin"
+// 	uuid "github.com/gofrs/uuid/v5"
+// 	"github.com/kimdcottrell/edgar/api/middleware"
+// )
 
-func AddRoutesForUsers(g *gin.RouterGroup) {
-	// TODO: add real auth middleware
-	authorized := g.Group(authPath, middleware.RequireAuth())
-	authorized.GET("/user", getPing)
+// type User struct {
+// 	ID       uuid.UUID `db:"id" json:"id"`
+// 	Username string    `db:"username" json:"username"`
+// 	Password string    `db:"password" json:"password"`
+// }
 
-	g.GET("/user", getPing)
-}
+// func AddRoutesForUsers(g *gin.RouterGroup) {
+// 	// TODO: add real auth middleware
+// 	authorized := g.Group(authPath, middleware.RequireAuth())
+// 	authorized.GET("/user", getPing)
 
-func getUsers(c *gin.Context) {
-	c.PureJSON(http.StatusOK, gin.H{
-		"ping": "pong",
-	})
-}
+// 	g.GET("/user", getPing)
+// }
+
+// func getUsers(c *gin.Context) {
+// 	c.PureJSON(http.StatusOK, gin.H{
+// 		"ping": "pong",
+// 	})
+// }

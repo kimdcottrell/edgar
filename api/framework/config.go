@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	ADMIN_ONLY_PATH          = "sudo"
 	API_DB_CONNECTION_STRING = fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=%s",
 		os.Getenv("API_DB_USER"),
 		os.Getenv("API_DB_PASSWORD"),
