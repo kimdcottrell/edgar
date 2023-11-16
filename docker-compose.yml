@@ -5,6 +5,9 @@ services:
     build:
       context: .
       dockerfile: images/api.Dockerfile
+    depends_on:
+      persistent_db:
+        condition: service_healthy
     env_file:
       - .env
     volumes:
@@ -12,6 +15,7 @@ services:
       - ./main.go:/go/src/main.go
       - ./go.mod:/go/src/go.mod
       - ./go.sum:/go/src/go.sum
+      - ./workspace:/workspace
     working_dir: /go/src
     labels:
       - traefik.enable=true
@@ -33,6 +37,11 @@ services:
     restart: always
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U api"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - "5432:5432"
     volumes:

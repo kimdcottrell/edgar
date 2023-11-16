@@ -9,8 +9,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	fw "github.com/kimdcottrell/edgar/api/framework"
-
-	_ "github.com/lib/pq"
 )
 
 const (
@@ -18,12 +16,22 @@ const (
 )
 
 type Company struct {
-	Name string `json:"name"`
-	ID   string `json:"id"`
+	ID   string `json:"id" gorm:"primaryKey;autoIncrement:false"`
+	Name string `json:"name" gorm:"unique;not null;type:char(10);default:null"`
 }
 
-func AddRoutesForCompanies(g *gin.RouterGroup) {
-	g.GET("/companies", getCompanies)
+func (c Company) RunMigrations(s *Server) {
+	err := s.Database.Migrator().CreateTable(&Company{})
+	if err != nil {
+		panic("Failed to migrate database")
+	}
+}
+
+func (c Company) SetupRoutes(s *Server) {
+	v1 := s.Router.Group("/v1")
+	{
+		v1.GET("/companies", getCompanies)
+	}
 }
 
 func getCompanies(c *gin.Context) {

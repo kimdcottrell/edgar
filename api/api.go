@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	"github.com/kimdcottrell/edgar/api/framework"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 // ---
@@ -18,42 +18,63 @@ import (
 //	 - https://github.com/gowebexamples/goreddit/
 // ---
 
+type API interface {
+	RunMigrations(*Server)
+	SetupRoutes(*Server)
+}
+
 type Server struct {
 	Router
 	Database
 }
 
 type Database struct {
-	*sqlx.DB
+	*gorm.DB
 }
 
 type Router struct {
 	*gin.Engine
 }
 
+var (
+	API_ENDPOINTS = []API{Company{}}
+)
+
 const authPath string = "sudo"
 
 func Start() {
 	gin.ForceConsoleColor()
+
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		DSN: framework.API_DB_CONNECTION_STRING,
+	}), &gorm.Config{})
+	if err != nil {
+		panic("Failed to connect database")
+	}
+
 	server := Server{
 		Router{
 			gin.Default(),
 		},
 		Database{
-			sqlx.MustConnect("postgres", "user=api dbname=api host=persistent_db port=5432 password=password sslmode=disable"),
+			db,
 		},
 	}
-	server.Router.setupRoutes()
+	server.runMigrations()
+	server.setupRoutes()
 	server.Router.serve()
 }
 
+func (s *Server) runMigrations() {
+	for _, a := range API_ENDPOINTS {
+		a.RunMigrations(s)
+	}
+}
+
 // routes are to be held in their own respective files, near their handlers
-func (r *Router) setupRoutes() {
-	// Simple group: v1
-	v1 := r.Group("/v1")
-	{
-		AddRoutesForCompanies(v1)
-		AddRoutesForPing(v1)
+func (s *Server) setupRoutes() {
+	for _, a := range API_ENDPOINTS {
+		a.SetupRoutes(s)
 	}
 }
 
